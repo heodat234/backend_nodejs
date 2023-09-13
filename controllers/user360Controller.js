@@ -56,34 +56,44 @@ exports.getUser = (req, res) => {
     });
 };
 
-exports.getFrauds = (req, res) => {
-  const params = req.query;
-  // const userId = req.query.id; // Truy cập tham số kiểu GET có tên "id"
-
-  // // Kiểm tra xem tham số "id" có tồn tại hay không
-  // if (!userId) {
-  //   return res.status(400).json({ error: 'Tham số "id" là bắt buộc' });
-  // }
-  Fraud_info.findAll()
+exports.getFraudByID = (req, res) => {
+  const fraudId = req.query.id;
+  // Kiểm tra xem tham số "id" có tồn tại hay không
+  if (!fraudId) {
+    Fraud_info.findAll()
     .then((frauds) => {
       res.send({ status: true, data: frauds });
     })
     .catch((error) => {
       res.status(500).json({ error: "Lỗi truy vấn cơ sở dữ liệu" });
     });
-};
-
-exports.getFraudByID = (req, res) => {
-  const fraudId = req.params.id;
-  // Kiểm tra xem tham số "id" có tồn tại hay không
-  if (!fraudId) {
-    return res.status(400).json({ error: 'Tham số "id" là bắt buộc' });
-  }
-  Fraud_info.findByPk(fraudId)
+  }else{
+    Fraud_info.findByPk(fraudId)
     .then((fraud) => {
       res.send({ status: true, data: fraud });
     })
     .catch((error) => {
       res.status(500).json({ error: "Lỗi truy vấn cơ sở dữ liệu" });
     });
+  }
+  
 };
+
+exports.updateFraud = (req, res) => {
+  const fraudId = req.body.id;
+  if (!fraudId) {
+    return res.status(400).json({ error: 'Tham số "id" là bắt buộc' });
+  }
+  Fraud_info.update(req.body, {
+    where: {
+      ID: fraudId
+    }
+  })
+    .then((fraud) => {
+      res.send({ status: true, message: 'update thành công' });
+    })
+    .catch((error) => {
+      res.status(500).json({ error: "Lỗi truy vấn cơ sở dữ liệu" });
+    });
+};
+
