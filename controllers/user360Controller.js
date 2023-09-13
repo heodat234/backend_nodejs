@@ -1,8 +1,5 @@
-// const User360 = require("../models/user360.js.tmp");
 const db = require("../models/index");
-// const { QueryTypes } = require("sequelize");
-
-// const { validationResult } = require("express-validator");
+const { validationResult } = require("express-validator");
 const Fraud_info = db.fraud_info;
 const Users = db.users;
 const sequelize = db.sequelize;
@@ -49,10 +46,15 @@ exports.getUser = (req, res) => {
       // mapToModel: true, // Ánh xạ kết quả vào mô hình
     })
     .then((user) => {
-      res.send({ status: user.length ? true : false, data: user.length ? user[0] : user });
+      res.send({
+        status: user.length ? true : false,
+        data: user.length ? user[0] : user,
+      });
     })
     .catch((error) => {
-      res.status(500).json({ error: "Lỗi truy vấn cơ sở dữ liệu" });
+      res
+        .status(500)
+        .send({ status: false, message: "Lỗi truy vấn cơ sở dữ liệu" });
     });
 };
 
@@ -61,39 +63,90 @@ exports.getFraudByID = (req, res) => {
   // Kiểm tra xem tham số "id" có tồn tại hay không
   if (!fraudId) {
     Fraud_info.findAll()
-    .then((frauds) => {
-      res.send({ status: true, data: frauds });
-    })
-    .catch((error) => {
-      res.status(500).json({ error: "Lỗi truy vấn cơ sở dữ liệu" });
-    });
-  }else{
+      .then((frauds) => {
+        res.send({ status: true, data: frauds });
+      })
+      .catch((error) => {
+        res
+          .status(500)
+          .send({ status: false, message: "Lỗi truy vấn cơ sở dữ liệu" });
+      });
+  } else {
     Fraud_info.findByPk(fraudId)
-    .then((fraud) => {
-      res.send({ status: true, data: fraud });
-    })
-    .catch((error) => {
-      res.status(500).json({ error: "Lỗi truy vấn cơ sở dữ liệu" });
-    });
+      .then((fraud) => {
+        res.send({ status: true, data: fraud });
+      })
+      .catch((error) => {
+        res
+          .status(500)
+          .send({ status: false, message: "Lỗi truy vấn cơ sở dữ liệu" });
+      });
   }
-  
+};
+
+exports.createFraud = (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    // Nếu có lỗi, trả về danh sách lỗi cho client
+    return res.status(400).json({ status: false, message: errors.array() });
+  }
+
+  try {
+    const data = req.body;
+    if (!data) {
+      return res
+        .status(400)
+        .send({ status: false, message: 'Tham số "id" là bắt buộc' });
+    }
+    Fraud_info.create(data)
+      .then((fraud) => {
+        res.send({ status: true, message: "thêm fraud thành công" });
+      })
+      .catch((error) => {
+        res
+          .status(500)
+          .send({ status: false, message: "Lỗi truy vấn cơ sở dữ liệu" });
+      });
+  } catch (error) {
+    // Xử lý lỗi nếu có
+    return res
+      .status(500)
+      .json({ status: false, message: "Lỗi lưu trữ dữ liệu" });
+  }
 };
 
 exports.updateFraud = (req, res) => {
-  const fraudId = req.body.id;
-  if (!fraudId) {
-    return res.status(400).json({ error: 'Tham số "id" là bắt buộc' });
-  }
-  Fraud_info.update(req.body, {
-    where: {
-      ID: fraudId
-    }
-  })
-    .then((fraud) => {
-      res.send({ status: true, message: 'update thành công' });
-    })
-    .catch((error) => {
-      res.status(500).json({ error: "Lỗi truy vấn cơ sở dữ liệu" });
-    });
-};
+  const errors = validationResult(req);
 
+  if (!errors.isEmpty()) {
+    // Nếu có lỗi, trả về danh sách lỗi cho client
+    return res.status(400).json({ status: false, message: errors.array() });
+  }
+  try {
+    const fraudId = req.body.id;
+    if (!fraudId) {
+      return res
+        .status(400)
+        .send({ status: false, message: 'Tham số "id" là bắt buộc' });
+    }
+    Fraud_info.update(req.body, {
+      where: {
+        ID: fraudId,
+      },
+    })
+      .then((fraud) => {
+        res.send({ status: true, message: "update thành công" });
+      })
+      .catch((error) => {
+        res
+          .status(500)
+          .send({ status: false, message: "Lỗi truy vấn cơ sở dữ liệu" });
+      });
+  } catch (error) {
+    // Xử lý lỗi nếu có
+    return res
+      .status(500)
+      .json({ status: false, message: "Lỗi lưu trữ dữ liệu" });
+  }
+};

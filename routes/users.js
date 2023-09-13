@@ -1,4 +1,5 @@
 var express = require('express');
+const { body } = require('express-validator');
 const user360Controller = require('../controllers/user360Controller');
 
 var router = express.Router();
@@ -10,11 +11,14 @@ router.get('/', user360Controller.getUser);
 
 router.get('/fraud/', user360Controller.getFraudByID);
 
-// router.post('/create', (req, res) => {
-//   user360.create(req.body, res);
-// });
+router.post('/fraud/', [
+  body('type').exists().notEmpty().withMessage('Trường "type" là bắt buộc'),
+  body('userID').exists().notEmpty().withMessage('Trường "userID" là bắt buộc'),
+], user360Controller.createFraud);
 
-router.put('/fraud/update/', user360Controller.updateFraud);
+router.put('/fraud/update/', [
+  body('id').exists().notEmpty().withMessage('Trường "id" là bắt buộc'),
+], user360Controller.updateFraud);
 
 // router.delete('/delete/:id/', (req, res) => {
 //   user360.delete_user(req.params.id, res);
